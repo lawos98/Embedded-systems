@@ -11,3 +11,7 @@
 ![AudioVis](matrix.png)
 
 7. Sending data to devices via Wi-Fi
+
+# Hardware platform
+
+[Arduino Nano RP2040 Connect](https://store.arduino.cc/products/arduino-nano-rp2040-connect#looxReviews)
