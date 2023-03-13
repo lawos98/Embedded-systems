@@ -4,10 +4,10 @@
 2. Sound re-noising.
 4. Create audio visualion matrix.
 
-![AudioVis](assets/AudVis.gif)
+![AudioVis](AudVis.gif)
 
 5. Collecting the average for each device (bulb / strip
 
-![AudioVis](assets/matrix.png)
+![AudioVis](matrix.png)
 
 7. Sending data to devices via Wi-Fi
