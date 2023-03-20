@@ -16,7 +16,12 @@
 
 [Arduino Nano RP2040 Connect](https://store.arduino.cc/products/arduino-nano-rp2040-connect#looxReviews)
 
-![AudioVis](Arduino-Nano-RP2040-Connect-with.jpg)
+<br/><br/>
+<div align=center padding=100>
+<img src=Arduino-Nano-RP2040-Connect-with.jpg width=75% padding=100>
+</div>
+<br/><br/>
+<br/><br/>
 
 <table border="0" cellspacing="0"><colgroup width="148"></colgroup> <colgroup width="222"></colgroup> <colgroup width="305"></colgroup>
 <tbody>
