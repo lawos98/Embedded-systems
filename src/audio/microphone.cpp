@@ -36,20 +36,17 @@ void processSamples(short *buffer, int numSamples) {
         if (peakCounter > samplesPerBeat / 2) {
           beatCounter++;
           peakCounter = 0;
-          onsetSampleCounter = 0;
         }
       }
       prevMaxValue = maxValue;
       prevMaxPos = maxPos;
     }
     if (smoothedData[i] > onsetThreshold) {
-      if (onsetSampleCounter > samplesPerBeat) {
+      if (peakCounter > samplesPerBeat) {
         beatCounter++;
-        onsetSampleCounter = 0;
         peakCounter = 0;
       }
     }
-    onsetSampleCounter++;
     peakCounter++;
   }
 }
