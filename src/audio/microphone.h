@@ -1,3 +1,4 @@
+void processSamples();
 void onPDMdata();
-void microphoneInit();
-void microphoneRead();
+void micSetup();
+void getValues();

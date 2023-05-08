@@ -2,79 +2,76 @@
 #include <PDM.h>
 #include "microphone.h"
 
-static const char CHANNELS = 1;
-// Sampling frequency
-static const int FREQUENCY = 16000;
-// Number of PDM samples
+const int bufferSize = 512;
+short sampleBuffer[bufferSize];
+const int sampleRate = 16000;
+const int samplesPerBeat = sampleRate / 4;
+int onsetThreshold = 1000;
+int bassDropThreshold = 1000;
+int onsetSampleCounter = 0;
+int beatCounter = 0;
+const float alpha = 0.9;
+const float beta = 0.1;
+const int windowSize = 20;
+float prevMaxValue = 0.0;
+int prevMaxPos = -1;
+float peakThreshold = 0.5;
+int peakCounter = 0;
 
-// Buffer to read samples into, each sample is 16-bits
-short sampleBuffer[512] = {0};
+void processSamples(short *buffer, int numSamples) {
+  static float smoothedData[bufferSize] = {0};
 
-// Number of audio samples read
-volatile int samplesRead;
-
-// Number of filter coefficients
-const int N = 16;
-
-// Filter coefficients
-float w[N] = {0};
-
-// Input buffer
-float x[N] = {0};
-
-
-// Step size
-const float mu = 0.0000002;
-
-void onPDMdata() {
-  // Query the number of available bytes
-  int bytesAvailable = PDM.available();
-
-  // Read into the sample buffer
-  PDM.read(sampleBuffer, bytesAvailable);
-
-  // 16-bit, 2 bytes per sample
-  samplesRead = bytesAvailable / 2;
-}
-
-void microphoneInit() {
-  while (!Serial){}
-  PDM.onReceive(onPDMdata);
-  PDM.setGain(-20); // Optionally set the gain
-  if (!PDM.begin(CHANNELS, FREQUENCY)) {
-    Serial.println("Failed to start PDM!");
-    while (1);
+  for (int i = 0; i < numSamples; i++) {
+    smoothedData[i] = alpha * smoothedData[i] + beta * buffer[i];
+    if (i > windowSize && i < numSamples - windowSize) {
+      float maxValue = 0.0;
+      int maxPos = -1;
+      for (int j = i - windowSize; j <= i + windowSize; j++) {
+        if (smoothedData[j] > maxValue) {
+          maxValue = smoothedData[j];
+          maxPos = j;
+        }
+      }
+      if (prevMaxPos != -1 && prevMaxPos != maxPos && maxValue - prevMaxValue > peakThreshold) {
+        if (peakCounter > samplesPerBeat / 2) {
+          beatCounter++;
+          peakCounter = 0;
+          onsetSampleCounter = 0;
+        }
+      }
+      prevMaxValue = maxValue;
+      prevMaxPos = maxPos;
+    }
+    if (smoothedData[i] > onsetThreshold) {
+      if (onsetSampleCounter > samplesPerBeat) {
+        beatCounter++;
+        onsetSampleCounter = 0;
+        peakCounter = 0;
+      }
+    }
+    onsetSampleCounter++;
+    peakCounter++;
   }
 }
 
-void microphoneRead() {
-  if(samplesRead) {  // Wait for samples to be read
-    // Apply LMS noise cancellation
-    for (int i = 0; i < samplesRead; i++) {
-      // Shift input buffer
-      for (int j = N-1; j > 0; j--) {
-        x[j] = x[j-1];
-      }
-      x[0] = sampleBuffer[i];
-      
-      // Calculate output
-      float y = 0;
-      for (int j = 0; j < N; j++) {
-        y += w[j] * x[j];
-      }
-      
-      // Update filter coefficients
-      float e = sampleBuffer[i] - y;
-      for (int j = 0; j < N; j++) {
-        w[j] += mu * e * x[j];
-      }
-      
-      // Apply low-pass filter
-      y = 0.9 * y + 0.1 * sampleBuffer[i];
-      
-      // Write filtered data to serial port
-      Serial.println(y);
-    }
-    samplesRead = 0;
+void onPDMdata() {
+  int bytesAvailable = PDM.available();
+  int bytesRead = PDM.read(sampleBuffer, bytesAvailable);
+  processSamples(sampleBuffer, bytesRead / 2);
+}
+
+void getValues(){
+  Serial.print(beatCounter);
+  Serial.print(",");
+  Serial.print(peakCounter);
+  Serial.println();
+}
+
+void micSetup() {
+  Serial.begin(9600);
+  PDM.onReceive(onPDMdata);
+  if (!PDM.begin(1, sampleRate)) {
+    Serial.println("Failed to start PDM!");
+    while (1);
   }
 }
