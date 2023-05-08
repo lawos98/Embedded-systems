@@ -4,7 +4,8 @@ AGH The WIET course expands the scope of competence, in the design and construct
 
 ## List
 
-* [Concept](concept)
+* [Concept](documentation/concept)
+* [Microphone](documentation/microphone)
 
 # Tech Stack
 
@@ -21,7 +22,7 @@ AGH The WIET course expands the scope of competence, in the design and construct
 
 <br/><br/>
 <div align=center padding=100>
-<img src=/concept/Arduino-Nano-RP2040-Connect-with.jpg width=75% padding=100>
+<img src=/documentation/concept/Arduino-Nano-RP2040-Connect-with.jpg width=75% padding=100>
 <br/><br/>
 <br/><br/>
 
