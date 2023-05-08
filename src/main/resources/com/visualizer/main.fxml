@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.visualizer.SampleController">
+    <Label text="Beat:"/>
+    <Label fx:id="beatLabel" />
+    <Label text="Bass:"/>
+    <Label fx:id="bassLabel" />
+    <Label text="Peak:"/>
+    <Label fx:id="peakLabel" />
+
+    <LineChart fx:id="chart" >
+        <xAxis>
+            <NumberAxis label="Sample" />
+        </xAxis>
+        <yAxis>
+            <NumberAxis label="Value" />
+        </yAxis>
+    </LineChart>
+</VBox>
