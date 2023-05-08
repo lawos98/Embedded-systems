@@ -16,7 +16,6 @@ const int windowSize = 20;
 float prevMaxValue = 0.0;
 int prevMaxPos = -1;
 float peakThreshold = 0.5;
-int peakCounter = 0;
 
 void processSamples(short *buffer, int numSamples) {
   static float smoothedData[bufferSize] = {0};
@@ -33,9 +32,9 @@ void processSamples(short *buffer, int numSamples) {
         }
       }
       if (prevMaxPos != -1 && prevMaxPos != maxPos && maxValue - prevMaxValue > peakThreshold) {
-        if (peakCounter > samplesPerBeat / 2) {
+        if (onsetSampleCounter > samplesPerBeat / 2) {
           beatCounter++;
-          peakCounter = 0;
+          onsetSampleCounter = 0;
         }
       }
       prevMaxValue = maxValue;
@@ -44,10 +43,10 @@ void processSamples(short *buffer, int numSamples) {
     if (smoothedData[i] > onsetThreshold) {
       if (peakCounter > samplesPerBeat) {
         beatCounter++;
-        peakCounter = 0;
+        onsetSampleCounter = 0;
       }
     }
-    peakCounter++;
+    onsetSampleCounter++;
   }
 }
 
