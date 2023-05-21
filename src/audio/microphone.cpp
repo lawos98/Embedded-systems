@@ -2,51 +2,63 @@
 #include <PDM.h>
 #include "microphone.h"
 
-const int bufferSize = 512;
-short sampleBuffer[bufferSize];
-const int sampleRate = 16000;
-const int samplesPerBeat = sampleRate / 4;
-int onsetThreshold = 1000;
-int bassDropThreshold = 1000;
-int onsetSampleCounter = 0;
-int beatCounter = 0;
-const float alpha = 0.9;
-const float beta = 0.1;
-const int windowSize = 20;
-float prevMaxValue = 0.0;
-int prevMaxPos = -1;
-float peakThreshold = 0.5;
+constexpr int bufferSize = 512;
+constexpr int windowSize = 40;
+constexpr int bassWindowSize = 2;
+constexpr float alpha = 0.9;
+constexpr float beta = 0.1;
+constexpr float onsetThreshold = 0.2;
+constexpr float peakThreshold = 0.01;
+constexpr float bassDropThreshold = 0.001;
+constexpr float silenceThreshold = 0.05;
+
+
+float smoothedData[bufferSize] = {0};
+float prevBassPower = 0.0;
+short sampleBuffer[bufferSize] = {0};
+
+bool bassDropDetected = false;
+bool peakDetected = false;
+bool onsetDetected = false;
 
 void processSamples(short *buffer, int numSamples) {
-  static float smoothedData[bufferSize] = {0};
-
   for (int i = 0; i < numSamples; i++) {
-    smoothedData[i] = alpha * smoothedData[i] + beta * buffer[i];
-    if (i > windowSize && i < numSamples - windowSize) {
-      float maxValue = 0.0;
-      int maxPos = -1;
-      for (int j = i - windowSize; j <= i + windowSize; j++) {
-        if (smoothedData[j] > maxValue) {
-          maxValue = smoothedData[j];
-          maxPos = j;
-        }
+    float currentSample = buffer[i] / 32768.0;
+    float smoothedValue = alpha * smoothedData[i] + beta * currentSample;
+
+    // Bass Drop detection
+    if (i % bassWindowSize == 0 && i + bassWindowSize < numSamples) {
+      float bassPower = 0.0;
+      for (int j = i; j < i + bassWindowSize; j++) {
+        float sample = buffer[j] / 32768.0;
+        bassPower += sample * sample;
       }
-      if (prevMaxPos != -1 && prevMaxPos != maxPos && maxValue - prevMaxValue > peakThreshold) {
-        if (onsetSampleCounter > samplesPerBeat / 2) {
-          beatCounter++;
-          onsetSampleCounter = 0;
-        }
+      if (bassPower > bassDropThreshold * bassWindowSize + prevBassPower) {
+        bassDropDetected = true;
       }
-      prevMaxValue = maxValue;
-      prevMaxPos = maxPos;
+      else{
+        bassDropDetected = false;
+      }
+      prevBassPower = bassPower / bassWindowSize;
     }
-    if (smoothedData[i] > onsetThreshold) {
-      if (peakCounter > samplesPerBeat) {
-        beatCounter++;
-        onsetSampleCounter = 0;
-      }
+
+    // Peak detection logic
+    if (smoothedValue > peakThreshold) {
+      peakDetected = true;
     }
-    onsetSampleCounter++;
+    else{
+      peakDetected = false;
+    }
+
+    // Onset detection logic
+    if (i >= windowSize && smoothedValue > onsetThreshold * smoothedData[i - windowSize]) {
+      onsetDetected = true;
+    }
+    else{
+      onsetDetected = false;
+    }
+
+    smoothedData[i] = smoothedValue;
   }
 }
 
@@ -57,17 +69,19 @@ void onPDMdata() {
 }
 
 void getValues(){
-  Serial.print(beatCounter);
+  Serial.print(bassDropDetected);
   Serial.print(",");
-  Serial.print(peakCounter);
+  Serial.print(peakDetected);
+  Serial.print(",");
+  Serial.print(onsetDetected);
   Serial.println();
 }
 
 void micSetup() {
   Serial.begin(9600);
   PDM.onReceive(onPDMdata);
-  if (!PDM.begin(1, sampleRate)) {
+  if (!PDM.begin(1, 16000)) {
     Serial.println("Failed to start PDM!");
-    while (1);
+    while (true);
   }
 }
