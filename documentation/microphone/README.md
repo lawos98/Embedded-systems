@@ -11,22 +11,24 @@ That provides a way to capture and process audio data from a microphone connecte
 
 The following configuration variables can be adjusted to fine-tune the beat and onset detection algorithm:
 
-* `bufferSize`: The size of the audio buffer in samples
-* `sampleRate`: The sample rate of the audio data
-* `samplesPerBeat`: The number of audio samples per beat. It's calculated as sampleRate / 4, assuming a tempo of 4 beats per measure.
-* `onsetThreshold`: The minimum amplitude of an audio sample required to trigger an "onset", which is a sudden change in the audio signal that may indicate the beginning of a beat or musical phrase.
-* `bassDropThreshold`: A threshold for detecting "bass drops", which are sudden decreases in the bass frequency content of the audio that may indicate a musical drop or breakdown.
-* `peakThreshold`: The threshold for detecting a peak in the smoothed signal.
+* `bufferSize`: The size of the sample buffer used for storing audio data. It is set to 512.
+* `windowSize`: The size of the window used for onset detection. It determines the number of previous samples considered when evaluating the onset. It is set to 40.
+* `bassWindowSize`: The size of the window used for bass drop detection. It determines the number of consecutive samples used to calculate the bass power. It is set to 2.
+* `alpha`: Smoothing coefficient for the exponential moving average used to smooth the audio data. It is set to 0.9.
+* `beta`: Smoothing coefficient for the current sample used in the exponential moving average. It is set to 0.1.
+* `onsetThreshold`: The threshold for detecting onsets. If the current sample is greater than this threshold multiplied by the corresponding previous sample within the window, an onset is detected. It is set to 0.2.
+* `peakThreshold` : The threshold for detecting peaks. If the smoothed value of the current sample is greater than this threshold, a peak is detected. It is set to 0.01.
+* `bassDropThreshold` : The threshold for detecting bass drops. If the bass power within the bass window is greater than this threshold multiplied by the previous bass power, a bass drop is detected. It is set to 0.001.
+* `silenceThreshold` : The threshold for silence detection. It is not explicitly used in the code but is defined for reference. It is set to 0.05.
 
 ### Variables
 
-* `sampleBuffer`: An array that stores the audio samples.
-* `onsetSampleCounter`: A counter that keeps track of the number of samples since the last onset.
-* `beatCounter`: A counter that keeps track of the number of beats detected so far.
-* `alpha and beta`: Coefficients used to smooth the incoming audio signal.
-* `windowSize`: The size of the window used to find local maxima in the smoothed signal.
-* `prevMaxValue` and `prevMaxPos`: The maximum value and position of the previous local maximum in the smoothed signal, used to detect peaks in the signal.
-* `peakCounter`: A counter that keeps track of the number of peaks detected so far.
+* `sampleBuffer`: An array of shorts used to store the audio samples received from the PDM microphone. It has a size of bufferSize and is initialized with zeros.
+* `smoothedData` : An array of floats used to store the smoothed audio data. It has a size of bufferSize and is initialized with zeros.
+* `prevBassPower` : A float variable that holds the previous bass power value used for bass drop detection. It is initialized to 0.0.
+* `bassDropDetected` : A boolean variable indicating whether a bass drop has been detected.
+* `peakDetected` : A boolean variable indicating whether a peak has been detected.
+* `onsetDetected` : A boolean variable indicating whether an onset has been detected.
 
 ### Functions
 
@@ -34,12 +36,12 @@ The following configuration variables can be adjusted to fine-tune the beat and 
 
 ```cpp
 void micSetup() {
-    Serial.begin(9600);
-    PDM.onReceive(onPDMdata);
-    if (!PDM.begin(1, sampleRate)) {
-        Serial.println("Failed to start PDM!");
-        while (1);
-    }
+  Serial.begin(9600);
+  PDM.onReceive(onPDMdata);
+  if (!PDM.begin(1, 16000)) {
+    Serial.println("Failed to start PDM!");
+    while (true);
+  }
 }
 ```
 
@@ -47,9 +49,9 @@ void micSetup() {
 
 ```cpp
 void onPDMdata() {
-    int bytesAvailable = PDM.available();
-    int bytesRead = PDM.read(sampleBuffer, bytesAvailable);
-    processSamples(sampleBuffer, bytesRead / 2);
+  int bytesAvailable = PDM.available();
+  int bytesRead = PDM.read(sampleBuffer, bytesAvailable);
+  processSamples(sampleBuffer, bytesRead / 2);
 }
 ```
 
@@ -57,36 +59,44 @@ void onPDMdata() {
 
 ```cpp
 void processSamples(short *buffer, int numSamples) {
-    static float smoothedData[bufferSize] = {0};
+  for (int i = 0; i < numSamples; i++) {
+    float currentSample = buffer[i] / 32768.0;
+    float smoothedValue = alpha * smoothedData[i] + beta * currentSample;
 
-    for (int i = 0; i < numSamples; i++) {
-        smoothedData[i] = alpha * smoothedData[i] + beta * buffer[i];
-        if (i > windowSize && i < numSamples - windowSize) {
-            float maxValue = 0.0;
-            int maxPos = -1;
-            for (int j = i - windowSize; j <= i + windowSize; j++) {
-                if (smoothedData[j] > maxValue) {
-                    maxValue = smoothedData[j];
-                    maxPos = j;
-                }
-            }
-            if (prevMaxPos != -1 && prevMaxPos != maxPos && maxValue - prevMaxValue > peakThreshold) {
-                if (onsetSampleCounter > samplesPerBeat / 2) {
-                    beatCounter++;
-                    onsetSampleCounter = 0;
-                }
-            }
-            prevMaxValue = maxValue;
-            prevMaxPos = maxPos;
-        }
-        if (smoothedData[i] > onsetThreshold) {
-            if (peakCounter > samplesPerBeat) {
-                beatCounter++;
-                onsetSampleCounter = 0;
-            }
-        }
-        onsetSampleCounter++;
+    // Bass Drop detection
+    if (i % bassWindowSize == 0 && i + bassWindowSize < numSamples) {
+      float bassPower = 0.0;
+      for (int j = i; j < i + bassWindowSize; j++) {
+        float sample = buffer[j] / 32768.0;
+        bassPower += sample * sample;
+      }
+      if (bassPower > bassDropThreshold * bassWindowSize + prevBassPower) {
+        bassDropDetected = true;
+      }
+      else{
+        bassDropDetected = false;
+      }
+      prevBassPower = bassPower / bassWindowSize;
     }
+
+    // Peak detection logic
+    if (smoothedValue > peakThreshold) {
+      peakDetected = true;
+    }
+    else{
+      peakDetected = false;
+    }
+
+    // Onset detection logic
+    if (i >= windowSize && smoothedValue > onsetThreshold * smoothedData[i - windowSize]) {
+      onsetDetected = true;
+    }
+    else{
+      onsetDetected = false;
+    }
+
+    smoothedData[i] = smoothedValue;
+  }
 }
 ```
 
@@ -94,10 +104,12 @@ void processSamples(short *buffer, int numSamples) {
 
 ```cpp
 void getValues(){
-    Serial.print(beatCounter);
-    Serial.print(",");
-    Serial.print(peakCounter);
-    Serial.println();
+  Serial.print(bassDropDetected);
+  Serial.print(",");
+  Serial.print(peakDetected);
+  Serial.print(",");
+  Serial.print(onsetDetected);
+  Serial.println();
 }
 ```
 
