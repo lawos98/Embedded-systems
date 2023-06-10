@@ -1,4 +1,8 @@
 void processSamples();
 void onPDMdata();
 void micSetup();
-void getValues();
+void printValues();
+
+int getBassDropDetected();
+int getPeakDetected();
+int getOnsetDetected();

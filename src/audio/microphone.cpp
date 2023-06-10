@@ -2,14 +2,14 @@
 #include <PDM.h>
 #include "microphone.h"
 
-constexpr int bufferSize = 512;
+constexpr int bufferSize = 1024;
 constexpr int windowSize = 40;
 constexpr int bassWindowSize = 2;
 constexpr float alpha = 0.9;
 constexpr float beta = 0.1;
 constexpr float onsetThreshold = 0.2;
 constexpr float peakThreshold = 0.01;
-constexpr float bassDropThreshold = 0.001;
+constexpr float bassDropThreshold = 0.1;
 constexpr float silenceThreshold = 0.05;
 
 
@@ -17,9 +17,9 @@ float smoothedData[bufferSize] = {0};
 float prevBassPower = 0.0;
 short sampleBuffer[bufferSize] = {0};
 
-bool bassDropDetected = false;
-bool peakDetected = false;
-bool onsetDetected = false;
+int bassDropDetected = 0;
+int peakDetected = 0;
+int onsetDetected = 0;
 
 void processSamples(short *buffer, int numSamples) {
   for (int i = 0; i < numSamples; i++) {
@@ -34,28 +34,19 @@ void processSamples(short *buffer, int numSamples) {
         bassPower += sample * sample;
       }
       if (bassPower > bassDropThreshold * bassWindowSize + prevBassPower) {
-        bassDropDetected = true;
-      }
-      else{
-        bassDropDetected = false;
+        bassDropDetected++;
       }
       prevBassPower = bassPower / bassWindowSize;
     }
 
     // Peak detection logic
     if (smoothedValue > peakThreshold) {
-      peakDetected = true;
-    }
-    else{
-      peakDetected = false;
+      peakDetected++;
     }
 
     // Onset detection logic
     if (i >= windowSize && smoothedValue > onsetThreshold * smoothedData[i - windowSize]) {
-      onsetDetected = true;
-    }
-    else{
-      onsetDetected = false;
+      onsetDetected++;
     }
 
     smoothedData[i] = smoothedValue;
@@ -68,7 +59,7 @@ void onPDMdata() {
   processSamples(sampleBuffer, bytesRead / 2);
 }
 
-void getValues(){
+void printValues(){
   Serial.print(bassDropDetected);
   Serial.print(",");
   Serial.print(peakDetected);
@@ -77,8 +68,25 @@ void getValues(){
   Serial.println();
 }
 
+int getBassDropDetected(){
+  int temp = bassDropDetected;
+  bassDropDetected = 0;
+  return temp;
+}
+
+int getPeakDetected(){
+  int temp = peakDetected;
+  peakDetected = 0;
+  return temp;
+}
+
+int getOnsetDetected(){
+  int temp = onsetDetected;
+  onsetDetected = 0;
+  return temp;
+}
+
 void micSetup() {
-  Serial.begin(9600);
   PDM.onReceive(onPDMdata);
   if (!PDM.begin(1, 16000)) {
     Serial.println("Failed to start PDM!");
