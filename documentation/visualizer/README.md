@@ -1,4 +1,4 @@
-#Visualizer
+# Visualizer
 
 This code snippet is part of an audio visualizer that utilizes a concept of 'cursors' to orchestrate a visual representation of audio by dynamically changing color schemes based on certain sound characteristics, like bass drops or peaks. The idea is to generate a compelling light show that responds to music or other sounds, providing an immersive sensory experience.
 
