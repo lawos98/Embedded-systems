@@ -2,117 +2,27 @@
 
 That provides a way to capture and process audio data from a microphone connected to an Arduino board.
 
-### Dependencies
+### Global Variables
 
-* WiFiNINA
-* PDM
+* Import of the necessary libraries and parameters: `WiFiNINA` for WiFi connection and `PDM` for Pulse Density Modulation required for microphone input. `AudioAnalyzer` and `Parameters` are likely custom classes handling audio analysis and the storage of various parameters respectively.
+* Declaration of constants and variables required for processing audio data, including the buffer for samples (`sampleBuffer`), variables to track and analyze bass levels (`bassDropDetected`, `bassAvg`, etc.), and variables for signal processing (`alpha`, `beta`, `decayFactor`, etc.).
 
-### Configuration
+### Functions:
 
-The following configuration variables can be adjusted to fine-tune the beat and onset detection algorithm:
+* `processSamples(short *buffer, int numSamples)`: This function analyzes a buffer of sound samples. It first normalizes and smooths the data, discards quiet samples, and then detects 'onsets' (sharp rises in volume), bass drops, and peaks by comparing current and past samples.
+* `onPDMdata()`: This function is called whenever PDM data (microphone data) is available. It reads the PDM data into a buffer and then calls processSamples to process it.
+* `checkBassDropDetected()`, `checkPeakDetected()`, `getOnsetDetected()`: These functions return whether a bass drop, a peak, or an onset has been detected since the last call to these functions. They also reset the detection variables.
+* `micSetup()`: This function sets up the microphone. It tells the PDM library to call `onPDMdata` whenever data is available and starts the PDM system. If the PDM fails to start, it logs an error message and blocks indefinitely.
 
-* `bufferSize`: The size of the sample buffer used for storing audio data. It is set to 512.
-* `windowSize`: The size of the window used for onset detection. It determines the number of previous samples considered when evaluating the onset. It is set to 40.
-* `bassWindowSize`: The size of the window used for bass drop detection. It determines the number of consecutive samples used to calculate the bass power. It is set to 2.
-* `alpha`: Smoothing coefficient for the exponential moving average used to smooth the audio data. It is set to 0.9.
-* `beta`: Smoothing coefficient for the current sample used in the exponential moving average. It is set to 0.1.
-* `onsetThreshold`: The threshold for detecting onsets. If the current sample is greater than this threshold multiplied by the corresponding previous sample within the window, an onset is detected. It is set to 0.2.
-* `peakThreshold` : The threshold for detecting peaks. If the smoothed value of the current sample is greater than this threshold, a peak is detected. It is set to 0.01.
-* `bassDropThreshold` : The threshold for detecting bass drops. If the bass power within the bass window is greater than this threshold multiplied by the previous bass power, a bass drop is detected. It is set to 0.001.
-* `silenceThreshold` : The threshold for silence detection. It is not explicitly used in the code but is defined for reference. It is set to 0.05.
+### Overall, this code:
 
-### Variables
-
-* `sampleBuffer`: An array of shorts used to store the audio samples received from the PDM microphone. It has a size of bufferSize and is initialized with zeros.
-* `smoothedData` : An array of floats used to store the smoothed audio data. It has a size of bufferSize and is initialized with zeros.
-* `prevBassPower` : A float variable that holds the previous bass power value used for bass drop detection. It is initialized to 0.0.
-* `bassDropDetected` : A boolean variable indicating whether a bass drop has been detected.
-* `peakDetected` : A boolean variable indicating whether a peak has been detected.
-* `onsetDetected` : A boolean variable indicating whether an onset has been detected.
-
-### Functions
-
-* The `micSetup()` function initializes the serial communication and sets up the PDM interface to receive audio data. It also sets the sample rate to 16kHz.
-
-```cpp
-void micSetup() {
-  Serial.begin(9600);
-  PDM.onReceive(onPDMdata);
-  if (!PDM.begin(1, 16000)) {
-    Serial.println("Failed to start PDM!");
-    while (true);
-  }
-}
-```
-
-* The `onPDMdata()` function is called whenever new audio data is available. It reads the data from the PDM interface and passes it to the `processSamples()` function:
-
-```cpp
-void onPDMdata() {
-  int bytesAvailable = PDM.available();
-  int bytesRead = PDM.read(sampleBuffer, bytesAvailable);
-  processSamples(sampleBuffer, bytesRead / 2);
-}
-```
-
-* The `processSamples()` function processes the audio data and detects beats and onsets:
-
-```cpp
-void processSamples(short *buffer, int numSamples) {
-  for (int i = 0; i < numSamples; i++) {
-    float currentSample = buffer[i] / 32768.0;
-    float smoothedValue = alpha * smoothedData[i] + beta * currentSample;
-
-    // Bass Drop detection
-    if (i % bassWindowSize == 0 && i + bassWindowSize < numSamples) {
-      float bassPower = 0.0;
-      for (int j = i; j < i + bassWindowSize; j++) {
-        float sample = buffer[j] / 32768.0;
-        bassPower += sample * sample;
-      }
-      if (bassPower > bassDropThreshold * bassWindowSize + prevBassPower) {
-        bassDropDetected = true;
-      }
-      else{
-        bassDropDetected = false;
-      }
-      prevBassPower = bassPower / bassWindowSize;
-    }
-
-    // Peak detection logic
-    if (smoothedValue > peakThreshold) {
-      peakDetected = true;
-    }
-    else{
-      peakDetected = false;
-    }
-
-    // Onset detection logic
-    if (i >= windowSize && smoothedValue > onsetThreshold * smoothedData[i - windowSize]) {
-      onsetDetected = true;
-    }
-    else{
-      onsetDetected = false;
-    }
-
-    smoothedData[i] = smoothedValue;
-  }
-}
-```
-
-* The `getValues()` function can be used to print the values of `beatCounter` and `peakCounter` to the serial monitor:
-
-```cpp
-void getValues(){
-  Serial.print(bassDropDetected);
-  Serial.print(",");
-  Serial.print(peakDetected);
-  Serial.print(",");
-  Serial.print(onsetDetected);
-  Serial.println();
-}
-```
-
+1. Sets up the microphone and tells it to process audio samples whenever they are available.
+2. Processes incoming audio samples by smoothing, normalizing, and filtering them.
+   *  `Smoothing`: This process is used to reduce noise and minor fluctuations in the data, making the underlying pattern more visible. In this code, a basic smoothing algorithm, known as exponential smoothing, is applied to the data. This form of smoothing uses a smoothing factor (`alpha`) to calculate a running average where the most recent samples have a greater effect on the smoothed value. This is achieved by multiplying the smoothing factor with the previous smoothed data and adding it to the current sample multiplied by `(1 - alpha)`. The line of code doing this is `float smoothedValue = alpha * smoothedData[i] + beta * currentSample`;
+   *  `Normalizing`: Normalization is a process that adjusts values measured on different scales to a common scale. In this code, audio samples which are usually in the range of -32768 to 32767 (16-bit signed integers) are divided by 32768, normalizing them to a range between -1.0 and 1.0. This is shown in float currentSample = buffer[i] / 32768.0;.
+   *  `Filtering`: Filters are used to remove unwanted components or features from the data. In this code, a simple low-pass filter is used to extract the bass component of the audio. A low-pass filter allows signals with a frequency lower than a certain cutoff frequency to pass through and attenuates frequencies higher than the cutoff frequency. This is particularly useful for detecting bass drops, as they are characterized by low frequencies. The line of code that applies the low-pass filter to the smoothed value is float bassComponent = alpha * prevBassPower + beta * currentBassSample;.
+3. Continuously checks for 'onsets', 'peaks', and 'bass drops' in the audio data.
+4. Provides a way to check whether a bass drop, a peak, or an onset has been detected since the last check.
 
 
 
