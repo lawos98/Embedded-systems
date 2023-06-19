@@ -5,7 +5,13 @@ AGH The WIET course expands the scope of competence, in the design and construct
 ## List
 
 * [Concept](documentation/concept)
+* [Overview](documentation/overview)
+* [How to use](documentation/how-to-use)
 * [Microphone](documentation/microphone)
+* [Visualizer](documentation/visualizer)
+* [LightControler](documentation/light)
+* [WebConfig](documentation/web)
+* [Conclusion](documentation/conclusion)
 
 # Tech Stack
 
