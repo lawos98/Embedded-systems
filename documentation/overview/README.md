@@ -54,3 +54,13 @@ Finally, the averaged colors are sent to their respective devices. These devices
 
 Overall, this system offers a robust and highly customizable audio-visual experience. It allows for real-time interaction with the audio environment, providing visual feedback that can enhance musical enjoyment and engagement.
 
+
+### 7. How to works
+
+1. With 6Hz . Stopped after 10 s
+
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)](https://www.youtube.com/watch?v=4LYnQbiQxAs)
+
+3. With 1/6Hz . Working non stop
+
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)](https://www.youtube.com/watch?v=iZXTM4omqf4)
