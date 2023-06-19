@@ -19,7 +19,7 @@ This part of your code is responsible for controlling WiFi light bulbs in respon
 * `checkLights()`: This function checks the connection to each light device. It also initializes each light device by turning it off, setting its brightness to 100, setting its color to white, and then turning it back on.
 * `lightChange(int time)`: This function updates the color of each light bulb based on the average color of a region of the visualization. The regions are defined by the `params.coordinates` array.
 
-* In summary, this code:
+### Overall, the code:
 
 1. Maintains the WiFi connection and connection to each light bulb.
 2. Sends commands to the light bulbs to change their color, brightness, and power state.
