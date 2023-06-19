@@ -26,27 +26,27 @@ Examples with diffrent type of music
 
 * Classic Music
 
-![classic_music](documentation/overview/clasic_music.mp4)
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)]([http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=fltYUKRM_bc))
 
 * Rock Music
 
-![rock_music](documentation/overview/rock_music.mkv)
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)]([http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=LvL4P-AKW48))
 
 * Techno Music
 
-![rock_music](documentation/overview/techno_music.mp4)
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)]([http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=ihYX9--V2PU))
 
 ### 4. Color Matrix Generation
 
 The 1-dimensional color vector is then transformed into a 2-dimensional color matrix. This process involves rounding the color vector, mapping its colors to create a matrix that represents the visual display's current state.
 
-![AudioVis](documentation/concept/AudVis.gif)
+![AudioVis](/documentation/concept/AudVis.gif)
 
 ### 5. Color Averaging for Devices
 
 Each device is associated with a specific section of the matrix. The system calculates the average color for each device's designated section. This is done by summing the colors for all pixels in the region and then dividing by the total number of pixels.
 
-![AudioVis](documentation/concept/matrix.png)
+![AudioVis](/documentation/concept/matrix.png)
 
 ### 6. Color Transmission to Devices
 
