@@ -25,6 +25,9 @@ The web page ( on the arduino board Ip ) interface allows users to modify variou
 
 These parameters are presented to the user in a form. After making the desired adjustments, the user can submit the form to update the system settings.
 
+
+![Conf](conf_panel.png)
+
 ## Visualizing the Current Color Vector
 
 In addition to system modification, the web interface also allows for a visual representation of the current color vector state. For each element in the color vector, a corresponding color square is displayed on the webpage.
@@ -32,3 +35,6 @@ In addition to system modification, the web interface also allows for a visual r
 These color squares give a real-time glimpse of what the audio visualizer is currently displaying. The users can observe these color changes and adjust the system properties accordingly for a more customized experience.
 
 In conclusion, this web configuration capability not only allows for greater control and customization of the system but also provides a convenient and intuitive way to monitor the system's output.
+
+![Conf](current_Vector.png)
+
