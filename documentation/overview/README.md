@@ -26,15 +26,15 @@ Examples with diffrent type of music
 
 * Classic Music
 
-[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)]([http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=fltYUKRM_bc))
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)](https://www.youtube.com/watch?v=fltYUKRM_bc)
 
 * Rock Music
 
-[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)]([http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=LvL4P-AKW48))
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)](https://www.youtube.com/watch?v=LvL4P-AKW48)
 
 * Techno Music
 
-[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)]([http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=ihYX9--V2PU))
+[![Alternate Text](https://www.orduh.com/wp-content/uploads/2017/05/top-video-player-for-windows.png)](https://www.youtube.com/watch?v=ihYX9--V2PU)
 
 ### 4. Color Matrix Generation
 
